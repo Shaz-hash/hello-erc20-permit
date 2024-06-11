@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // import { ethers } from 'ethers';
 // import VerifySignature from '../../blockchain/artifacts/contracts/VerifySignature.sol/VerifySignature.json';
 import VerifySignature from 'artifacts/contracts/VerifySignature.sol/VerifySignature.json';
@@ -14,6 +14,14 @@ function SignUp() {
   const [userInfo, setUserInfo] = useState(null);
   const [error, setError] = useState(null);
   const [isVerified, setIsVerified] = useState(false);
+
+
+  useEffect(() => {
+    const storedSignature = localStorage.getItem('userSignature');
+    if (storedSignature) {
+      setIsVerified(true);
+    }
+  }, []);
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -39,10 +47,10 @@ function SignUp() {
         const messageHash = await contract.getMessageHash(myString);
         // const mySignature = await signer.signMessage(myString);
         // Sign the message hash using personal_sign
-      const mySignature = await window.ethereum.request({
-        method: 'personal_sign',
-        params: [myAccountAddress, messageHash],
-      });
+        const mySignature = await window.ethereum.request({
+          method: 'personal_sign',
+          params: [myAccountAddress, messageHash],
+        });
         console.log("My String : ", myString);
         console.log("Account address : ", myAccountAddress)
         console.log("My message hash  : ", messageHash);
@@ -50,7 +58,14 @@ function SignUp() {
         const verificationDecision = await contract.verify(myAccountAddress , myString , mySignature);
         console.log("Result of Signature verification is : ", verificationDecision);
 
-
+        if (verificationDecision) {
+          // Save the signature in localStorage
+          localStorage.setItem('userSignature', mySignature);
+          setIsVerified(true);
+          setError(null);
+        } else {
+          setError('Verification failed. Please try again.');
+        }
 
 
 
@@ -127,32 +142,38 @@ function SignUp() {
   return (
     <div>
       <h2>Sign Up</h2>
-      <form onSubmit={handleSignUp}>
-        <div>
-          <label>Username:</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Password:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Sign Up</button>
-      </form>
+      {!isVerified && (
+        <form onSubmit={handleSignUp}>
+          <div>
+            <label>Username:</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label>Password:</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit">Sign Up</button>
+        </form>
+      )}
 
-      <h2>Login</h2>
-      <form onSubmit={handleLogin}>
-        <button type="submit">Login</button>
-      </form>
+      {isVerified && (
+        <div>
+          <h2>Login</h2>
+          <form onSubmit={handleLogin}>
+            <button type="submit">Login</button>
+          </form>
+        </div>
+      )}
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 

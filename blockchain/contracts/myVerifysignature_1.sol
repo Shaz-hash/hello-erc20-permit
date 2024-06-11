@@ -15,99 +15,7 @@ How to Sign and Verify
 3. Compare recovered signer to claimed signer
 */
 
-contract VerifySignature {
-    // My variables :
-    struct User {
-        string username;
-        string password;
-    }
-
-    // Mapping to store user credentials by their public key address
-    mapping(address => User) private users;
-
-    // Mapping to store signatures by public key address
-    mapping(address => bytes) private signatures;
-
-    // Function to sign up a new user
-    function signUp(
-        address _account,
-        string memory _username,
-        string memory _password,
-        bytes memory _signature
-    ) public returns (bool) {
-        require(_account != address(0), "Invalid account address");
-        require(bytes(_username).length > 0, "Username cannot be empty");
-        require(bytes(_password).length > 0, "Password cannot be empty");
-
-        // verifying the signature against the details entered :
-        require(
-            verify(
-                _account,
-                string(abi.encodePacked(_username, ",", _password)),
-                _signature
-            ) == true,
-            "Invalid signature"
-        );
-        users[_account] = User(_username, _password);
-        signatures[_account] = _signature;
-        return true;
-    }
-
-    // Function to login with username, password, and account address
-    function login(
-        address _account,
-        string memory _username,
-        string memory _password,
-        bytes memory _signature
-    ) public view returns (bool) {
-        User memory user = users[_account];
-        // Compare the provided username and password with the stored ones
-        if (
-            keccak256(abi.encodePacked(user.username)) ==
-            keccak256(abi.encodePacked(_username)) &&
-            keccak256(abi.encodePacked(user.password)) ==
-            keccak256(abi.encodePacked(_password))
-        ) {
-            // verifying the signature now :
-            require(
-                verify(
-                    _account,
-                    string(abi.encodePacked(_username, ",", _password)),
-                    _signature
-                ) == true,
-                "Invalid signature"
-            );
-
-            return true;
-        } else {
-            return false;
-        }
-
-        // return false;
-    }
-
-    // Function to login with just a signature
-    function loginWithSignature(
-        bytes memory _signature
-    ) public view returns (bool) {
-        User memory user = users[msg.sender];
-        string memory myMessage = string(
-            abi.encodePacked(user.username, ",", user.password)
-        );
-        return verify(msg.sender, myMessage, _signature);
-    }
-
-    function loginWithSignature2(
-        address _account,
-        bytes memory _signature
-    ) public view returns (bool) {
-        User memory user = users[_account];
-        string memory myMessage = string(
-            abi.encodePacked(user.username, ",", user.password)
-        );
-        return verify(msg.sender, myMessage, _signature);
-    }
-
+contract myVerifySignature_1 {
     /* 1. Unlock MetaMask account
     ethereum.enable()
     */
@@ -135,10 +43,6 @@ contract VerifySignature {
         string memory _message
     ) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(_message));
-    }
-
-    function getSender() public view returns (address) {
-        return msg.sender;
     }
 
     /* 3. Sign message hash
